@@ -184,7 +184,7 @@ P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运
 此种优化策略下，Acceptor只需要存储：
 
 <strong id="storage">storage</strong>
-</be>
+<br/>
 - 它所批准的过的最高提案号的提案
 - 所响应过的Prepare请求中，最高的提案编号
 
