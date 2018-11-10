@@ -22,7 +22,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 可惜，Paxos-made-simple对于大部分人来讲，仍然不是一遍就能理解paxos算法的文章。我先看过《从Paxos到ZooKeeper》，然后再看Paxos-made-simple原文，才算理解此算法。<br/>
 这篇文章接下来，致力于剥离出Paxos-made-simple原文中的推导细节和证明细节，让你一遍懂Paxos。
 
-## 2. 想要的结果{#ds}
+## 2. 想要的结果
 分布式系统存在多个节点，这些节点可能是一台硬件机器，也可能是一个进程，我们想要这些节点各自提出数据提案，但最终的结果<strong id="result">result</strong>为：<br/>
 1. 这些被提出的提案中，只有一个被选定。
 2. 无提案被提出，则无提案被选中。
