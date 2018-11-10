@@ -37,7 +37,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 1. 每个节点执行速度任意，可能出错而停止，也可能重启，同时，当一个提案被选定后，所有的参与者都有可能失败或重启，因此，除非那些失败或重启的参与者可记录某些信息，否则无法确定最终一致性。
 2. 消息传输过程可能会延迟，也可能重复、丢失，但是消息不会被损坏，即消息内容不会被篡改。
 
-所以，我们想要的是，在[environment](#environment)下，达成[result](#result)，同时满足[safety](#safety)。
+所以，我们想要的是，在<a href=#environment>environment</a>下，达成<a href=#result>result</a>，同时满足<a href=#safety>safety</a>。
 
 ## 3.节点行为的抽象
         
@@ -48,12 +48,18 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 3. 选定提案
 4. 获取被选定的提案
 
-对于行为3、选定一个提案，如果我们认为，当大多数节点都批准了同样的提案，那么，此提案被选定，
-即<strong id="most-rule-pre">most-rule</strong><br/>
+
+
+对于行为3、选定一个提案，如果我们认为，当大多数节点都批准了同样的提案，那么，此提案被选定。
+<br/>
+<br/>
+<strong id="most-rule-pre">most-rule</strong><br/>
+- 如果大多数节点批准了同样的提案，那么此提案被选定。
+
 为何数量上需要是大多数节点，因为任意两个大多数节点的集合，一定存在交集，这个交集中的节点，可在不同的提案中进行权衡，从而不同提案达成一致。<br/>
 对于中国人来讲，可记忆为：少数服从多数。
-由于对[most-rule](#most-rule-pre)的认可，行为3不再是整个分布式系统的一个行为，它只是行为2到达一定节点数量后，产生的一个作用。
-于是，在[most-rule](#most-rule-pre)之下，节点的行为只剩下：1、2、4 <br/>
+由于对most-rule的认可，行为3不再是整个分布式系统的一个行为，它只是行为2到达一定节点数量后，产生的一个作用。
+于是，在most-rule之下，节点的行为只剩下：1、2、4 <br/>
 对此三种行为，进行抽象，将此三种行为封装为三种角色：<br/>
 1. Proposer，对应于行为1，发出提案者
 2. Acceptor，对应于行为2，接收提案者
@@ -68,7 +74,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 现在，我们可以考量，我们抽象出来的三种角色，Proposer，Acceptor，Learner，进行他们的行为时，需要满足哪些约束。
 <br/>
 <br/>
-<strong id="hope">hope</strong>：为了产生[result](#result),我们希望，哪怕只有一个提案被提出，也能达成result，选定一个提案。
+<strong id="hope">hope</strong>：为了产生<a href=#result>result</a>,我们希望，哪怕只有一个提案被提出，也能达成result，选定一个提案。
 <br/>
 <br/>
 此种希望，谕示着:<br/>
@@ -79,12 +85,12 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 显然，如果Accpetor收到第一个提案后，要去斟酌权衡:"我觉得下一个提案或许会更好"，那么对于分布式系统而言，有可能永远没有下一个提案，此与我们的hope相悖。<br/>
 ok,我们获得第一个对Acceptor的行为约束，P1。<br/>
 但是，P1同时带来了一个问题，如果Acceptor无脑同意第一个提案，那么可能存在的情形是：同一时间，有不同的提案被提出，但是没有任何一个提案占据了大多数的Acceptor，于是没有一个提案被选定。(极端情形，两个不同的提案分别被一半一半的Acceptor所批准了)<br/>
-如果,Acceptor能够批准不止一个提案，那么就可以同时满足[P1](#p1)和[most-rule](#most-rule)了。<br/>
+如果,Acceptor能够批准不止一个提案，那么就可以同时满足<a href=#p1>P1</a>和<a href=#most-rule>most-rule</a>了。<br/>
 即使在第一轮提案批准中，的确没有一个提案被大多数Acceptor接收到，即无法满足most-rule，无提案被选定。但是Acceptor可以继续接受并批准提案，这场分布式系统内部的通信会议可以继续下去。<br/>
 现在，由于Acceptor可以批准多个提案，我们先对提案进行一个记录，让提案有编号，从而知晓提案被提出和同意的先后次序。于是，一个提案可以被表示为“[编号，Value]”。<br/>
 对于提案的编号，可以使用开源的snowflake算法来生成。<br/>
 当然，由于Acceptor可以批准多个提案，所以可能会有多个提案都满足了most-rule,于是多个提案被选定了。对于
-[safety](#safety)中第二条来讲，如果被选定的提案有多个，那么需要保证多个提案为同一个值。<br/>
+<a href=#safety>safety</a>中第二条来讲，如果被选定的提案有多个，那么需要保证多个提案为同一个值。<br/>
 幸运的是，我们现在对提案进行了编号，所以可以通过编号次序来满足这一点:
 <br/>
 <br/>
@@ -97,7 +103,7 @@ ok,我们获得第一个对Acceptor的行为约束，P1。<br/>
 <strong id="p2a">P2a</strong>: 如果编号为M<sub>0</sub>、Value为V<sub>0</sub>的提案，那么所有比编号M<sub>0</sub>更高的，且被Acceptor批准的提案，其值也必须是V<sub>0</sub>。
 <br/>
 <br/>
-到现在为止，得出Acceptor行为必须满足的约束有: [P1](#p1)和[P2a](#p2a)
+到现在为止，得出Acceptor行为必须满足的约束有: <a href=#p1>P1</a>和<a href=#p2a>P2a</a>
 然而P1和P2a存在逻辑上的矛盾，假设一个Acceptor从未接受过提案，但此时有个提案已经被大多数的Acceptor批准，所以这个提案被选定了，但另一个值不同的提案发送给从未接受过提案的Acceptor，那么根据P1规则，Acceptor必须批准这个提案，但是根据规则P2a，Acceptor不得批准这个提案。
 <br/>
 解决这个矛盾的办法就是当提案被选定后，不再产生值不同的提案，即对P2a进行条件强化:
@@ -139,9 +145,9 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 <br/>
 逻辑过程为:
 
-[P2c](#p2c)=>[P2b](#p2b)=>[P2a](#p2a)=>[P2](#p2);
+<a href=#p2c>P2c</a>=><a href=#p2b>P2b</a>=><a href=#p2a>P2a</a>=><a href=#p2>P2</a>;
 
-[P2](#p2)+[P1](#p1)=[result](#result)+[hope](#hope);
+<a href=#p2>P2</a>+<a href=#p1>P1</a>=<a href=#result>result</a>+<a href=#hope>hope</a>;
 
 ## 5. Proposer提交提案
 有了P2c，我们可以总结出来Proposer的提案提交流程。
@@ -159,16 +165,16 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 ## 6. Acceptor批准提案
 
 由Proposer提交提案流程可知，Acceptor会收到两种类型的请求: Prepare和Accept。对于两种请求，Acceptor的响应策略应该为:
-- <strong>Prepare请求</strong>： Acceptor在任何时候响应此类型请求，并满足[回应](#response)。
+- <strong>Prepare请求</strong>： Acceptor在任何时候响应此类型请求，并满足<a href=#response>回应</a>。
 - <strong>Accept请求</strong>: 在不违背Accept现有承诺的前提下，可以响应Accept请求。
 
-不违背现有承诺,即不批准任何编号小于已经接受过的Prepare请求，加上约束[P1](#p1),可总结为:
+不违背现有承诺,即不批准任何编号小于已经接受过的Prepare请求，加上约束<a href=#p1>P1</a>,可总结为:
 <br/>
 <br/>
 <strong id="p1a">P1a</strong>: 一个Acceptor只要尚未响应过任何大于M<sub>n</sub>的Prepare请求，那么它就可以接受这个编号为M<sub>n</sub>的提案。
 <br/>
 <br/>
-P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运行环境[environment](#environment)提到，消息可能会延迟，于是Acceptor可能会接收到比已经接收到的Prepare请求的M<sub>n</sub>提案，编号更小的的提案的Prepare请求。同样，由于消息可能会重复，于是Acceptor可能会收到它已经批准过的提案的Prepare请求。
+P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运行环境<a href=#environment>environment</a>提到，消息可能会延迟，于是Acceptor可能会接收到比已经接收到的Prepare请求的M<sub>n</sub>提案，编号更小的的提案的Prepare请求。同样，由于消息可能会重复，于是Acceptor可能会收到它已经批准过的提案的Prepare请求。
 <br/>
 可对Acceptor行为做优化，优化为:
 <br/>
@@ -232,7 +238,7 @@ Proposer和Acceptor通过上文的协作，负责了提案的选定。Learner角
 既然主Learner不可发生故障，那么可以考虑多布置几个主Learner，于是引入一个更一般的方法:
 - 选定一个主Learner集合，Acceptor将提案被批准的消息同步到此集合中，此集合中任何一个Leaner都可通知其余Learner。
 
-另外，注意我们的[environment](environment),Acceptor发送给Learner的消息可能会丢失，这可能会导致Learner无法获知一个已经被选定的提案。
+另外，注意我们的<a href=#environment>environment</a>,Acceptor发送给Learner的消息可能会丢失，这可能会导致Learner无法获知一个已经被选定的提案。
 <br/>
 解决办法是:
 <br/>
@@ -248,7 +254,7 @@ Paxos算法的核心逻辑已经描述结束，但对于Proposer，需要预防�
 <br/>
 <strong id="circle-scenario">Circle-Scenario
 <br/>
-有两个Proposer按顺序产生一系列提案，当Proposer P1提出了一个提案M<sub>1</sub>，并且完成[阶段一](#phase1)，此时Proposer P2提出提案M<sub>2</sub> (明显2>1),M<sub>2</sub>也完成了[阶段一](#phase1)的提交，此时，提案M<sub>1</sub>后续的Accept请求才发出，于是被M<sub>2</sub>的Prepare请求拒绝，然后Proposer P1一怒之下，发出提案M<sub>3</sub>，提案M<sub>3</sub>也完成了[阶段一](#phase1),于是后续M<sub>2</sub>的Accept请求被拒绝。Proposer P2一怒之下，发出提案M<sub>4</sub> …… 
+有两个Proposer按顺序产生一系列提案，当Proposer P1提出了一个提案M<sub>1</sub>，并且完成<a href=#phase1>阶段一</a>，此时Proposer P2提出提案M<sub>2</sub> (明显2>1),M<sub>2</sub>也完成了<a href=#phase1>阶段一</a>的提交，此时，提案M<sub>1</sub>后续的Accept请求才发出，于是被M<sub>2</sub>的Prepare请求拒绝，然后Proposer P1一怒之下，发出提案M<sub>3</sub>，提案M<sub>3</sub>也完成了<a href=#phase1>阶段一</a>,于是后续M<sub>2</sub>的Accept请求被拒绝。Proposer P2一怒之下，发出提案M<sub>4</sub> …… 
 <br/>
 <br/>
 为了避免陷入Circle-Scenario，可以选择一个主Proposer，只要主Proposer才可以提出提案。这样一来，只要主Proposer能够与过半的Acceptor通信，那么整套算法就能保持活性。
