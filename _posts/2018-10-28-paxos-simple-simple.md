@@ -154,7 +154,7 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 
 首先，Proposer会先生成提案，即先进行Prepare请求，以期满足P2c：
 
-1. Proposer选择一个新的提案号M<sub>n</sub>，向一个包含大多数Acceptor的集合发送请求，要求如下<span id="response">回应</span>:
+1. Proposer选择一个新的提案号M<sub>n</sub>，向一个包含大多数Acceptor的集合发送请求，要求如下<span id="response" target="_parent">回应</span>:
     - 如果Acceptor已经批准提案，那么就向Proposer反馈当前该Acceptor已经批准过的编号小于M<sub>n</sub>但为最大编号的那个提案的值。
     - 向Proposer承诺，不再批准任何编号小于M<sub>n</sub>的提案。（这条承诺是必要的，因为Acceptor已经向Proposer发送了比M<sub>n</sub>编号小的提案的值，如果再批准比Mn编号小的提案，这种行为是无法通知到已经收到响应的Proposer的，且与上一条回应逻辑相悖）
 2. 如果Proposer收到了来自半数以上的Acceptor的响应，那么它可以产生提案[M<sub>n</sub>,V<sub>n</sub>],这里的V<sub>n</sub>是所有响应中编号为最大的提案的Value值。如果半数以上的Acceptor都没有同意任何提案，那么Proposer可以任意选择值V<sub>n</sub>。
