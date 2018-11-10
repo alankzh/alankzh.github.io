@@ -252,7 +252,7 @@ Proposer和Acceptor通过上文的协作，负责了提案的选定。Learner角
 Paxos算法的核心逻辑已经描述结束，但对于Proposer，需要预防一种类似"死锁"的情形。此情形为:
 <br/>
 <br/>
-<strong id="circle-scenario">Circle-Scenario
+<strong id="circle-scenario">Circle-Scenario</strong>
 <br/>
 有两个Proposer按顺序产生一系列提案，当Proposer P1提出了一个提案M<sub>1</sub>，并且完成<a href="#phase1">阶段一</a>，此时Proposer P2提出提案M<sub>2</sub> (明显2>1),M<sub>2</sub>也完成了<a href="#phase1">阶段一</a>的提交，此时，提案M<sub>1</sub>后续的Accept请求才发出，于是被M<sub>2</sub>的Prepare请求拒绝，然后Proposer P1一怒之下，发出提案M<sub>3</sub>，提案M<sub>3</sub>也完成了<a href="#phase1">阶段一</a>,于是后续M<sub>2</sub>的Accept请求被拒绝。Proposer P2一怒之下，发出提案M<sub>4</sub> …… 
 <br/>
