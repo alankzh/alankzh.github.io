@@ -10,7 +10,7 @@ tags: 服务端 Web C++ Java
 
 本文建议阅读时间为一个无人打扰的下午加上没人想你的晚上
 
-## 1.分布式一致性
+## 1. 分布式一致性
 我看过介绍自己公司架构演进的书，以及了解过一些大型互联网公司如google、facebook、的架构演进过程。所有的变化遵循着这个方向：<br/>
     单机部署->高质量小型机->分布式系统<br/>
 既然最终会演进到分布式系统，那么自然会面临一些分布式特有的问题。
@@ -22,24 +22,24 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 可惜，Paxos-made-simple对于大部分人来讲，仍然不是一遍就能理解paxos算法的文章。我先看过《从Paxos到ZooKeeper》，然后再看Paxos-made-simple原文，才算理解此算法。<br/>
 这篇文章接下来，致力于剥离出Paxos-made-simple原文中的推导细节和证明细节，让你一遍懂Paxos。
 
-## 2.想要的结果
-分布式系统存在多个节点，这些节点可能是一台硬件机器，也可能是一个进程，我们想要这些节点各自提出数据提案，但最终的结果<strong id="result">result</strong>为：<br/>
+## 2. 想要的结果
+分布式系统存在多个节点，这些节点可能是一台硬件机器，也可能是一个进程，我们想要这些节点各自提出数据提案，但最终的结果<h4 id="result">result</h4>为：<br/>
 1. 这些被提出的提案中，只有一个被选定。
 2. 无提案被提出，则无提案被选中。
 3. 当一个提案被选定后，节点们都可获取此提案的信息。
 
-对于一致性来讲，一致性安全需求<strong id="safety">safety</strong>为:<br/>
+对于一致性来讲，一致性安全需求<h4 id="safety">safety</h4>为:<br/>
 1. 只有被提出的提案才能被选定
 2. 只能有一个值被选定
 3. 如果一个节点认为一个被选定，则此提案真的被选定。
 
-并且，我们节点之间的通信，通信环境<strong id="environment">environment</strong>为：<br/>
+并且，我们节点之间的通信，通信环境<h4 id="environment">environment</h4>为：<br/>
 1. 每个节点执行速度任意，可能出错而停止，也可能重启，同时，当一个提案被选定后，所有的参与者都有可能失败或重启，因此，除非那些失败或重启的参与者可记录某些信息，否则无法确定最终一致性。
 2. 消息传输过程可能会延迟，也可能重复、丢失，但是消息不会被损坏，即消息内容不会被篡改。
 
 所以，我们想要的是，在<a href="#environment">environment</a>下，达成<a href="#result">result</a>，同时满足<a href="#safety">safety</a>。
 
-## 3.节点行为的抽象
+## 3. 节点行为的抽象
         
 为达成这个结果，考虑，节点本身会进行哪些行为。我们对节点行为本身进行分析后，对这些行为进行约束，让能满足我们想要结果的做法通过，无法满足我们想要结果的行为屏蔽，即可找到此一致性算法。<br/>
 对节点行为进行分析后，节点的行为可以分类为：<br/>
@@ -53,7 +53,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 对于行为3、选定一个提案，如果我们认为，当大多数节点都批准了同样的提案，那么，此提案被选定。
 <br/>
 <br/>
-<strong id="most-rule-pre">most-rule</strong><br/>
+<h4 id="most-rule-pre">most-rule</h3><br/>
 - 如果大多数节点批准了同样的提案，那么此提案被选定。
 
 为何数量上需要是大多数节点，因为任意两个大多数节点的集合，一定存在交集，这个交集中的节点，可在不同的提案中进行权衡，从而不同提案达成一致。<br/>
@@ -66,7 +66,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 3. Learner，对应于行为4，获取提案
 
 由于此三种角色是对节点行为的抽象，故单一节点可能不止扮演一种角色。<br/>
-现在，对于<strong id="most-rule">most-rule</strong>，可描述为：<br/>
+现在，对于most-rule，可描述为：<br/>
     如果大多数的Acceptor批准了一个提案，此提案被选定。
 
 ## 4. 推导环节，考量节点行为的约束。
@@ -74,12 +74,12 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 现在，我们可以考量，我们抽象出来的三种角色，Proposer，Acceptor，Learner，进行他们的行为时，需要满足哪些约束。
 <br/>
 <br/>
-<strong id="hope">hope</strong>：为了产生<a href="#result">result</a>,我们希望，哪怕只有一个提案被提出，也能达成result，选定一个提案。
+<h4 id="hope">hope</h4>：为了产生<a href="#result">result</a>,我们希望，哪怕只有一个提案被提出，也能达成result，选定一个提案。
 <br/>
 <br/>
 此种希望，谕示着:<br/>
 <br/>
-<strong id="p1">P1</strong>: 一个Accpetor必须批准它收到的第一个提案。
+<h4 id="p1">P1</h4>: 一个Accpetor必须批准它收到的第一个提案。
 <br/>
 <br/>
 显然，如果Accpetor收到第一个提案后，要去斟酌权衡:"我觉得下一个提案或许会更好"，那么对于分布式系统而言，有可能永远没有下一个提案，此与我们的hope相悖。<br/>
@@ -94,13 +94,13 @@ ok,我们获得第一个对Acceptor的行为约束，P1。<br/>
 幸运的是，我们现在对提案进行了编号，所以可以通过编号次序来满足这一点:
 <br/>
 <br/>
-<strong id="p2">P2</strong>: 如果编号为M<sub>0</sub>、Value值为V<sub>0</sub>的提案被选定，那么所有比编号M0更高的，且被选定的提案，其Value也必须是V<sub>0</sub>。
+<h4 id="p2">P2</h4>: 如果编号为M<sub>0</sub>、Value值为V<sub>0</sub>的提案被选定，那么所有比编号M0更高的，且被选定的提案，其Value也必须是V<sub>0</sub>。
 <br/>
 <br/>
 为了满足P2，实际操作上，我们在提案被选定的入口，即Acceptor批准提案时，来做约束。即满足:
 <br/>
 <br/>
-<strong id="p2a">P2a</strong>: 如果编号为M<sub>0</sub>、Value为V<sub>0</sub>的提案，那么所有比编号M<sub>0</sub>更高的，且被Acceptor批准的提案，其值也必须是V<sub>0</sub>。
+<h4 id="p2a">P2a</h4>: 如果编号为M<sub>0</sub>、Value为V<sub>0</sub>的提案，那么所有比编号M<sub>0</sub>更高的，且被Acceptor批准的提案，其值也必须是V<sub>0</sub>。
 <br/>
 <br/>
 到现在为止，得出Acceptor行为必须满足的约束有: <a href="#p1">P1</a>和<a href="#p2a">P2a</a>
@@ -109,7 +109,7 @@ ok,我们获得第一个对Acceptor的行为约束，P1。<br/>
 解决这个矛盾的办法就是当提案被选定后，不再产生值不同的提案，即对P2a进行条件强化:
 <br/>
 <br/>
-<strong id="P2b">P2b</strong>: 如果一个提案M<sub>0</sub>的Value值V<sub>0</sub>被选定，那么所有的Proposer产生的编号更大的提案，其值都为V<sub>0</sub>。
+<h4 id="P2b">P2b</h4>: 如果一个提案M<sub>0</sub>的Value值V<sub>0</sub>被选定，那么所有的Proposer产生的编号更大的提案，其值都为V<sub>0</sub>。
 <br/>
 <br/>
 P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束P1对于Acceptor可以轻松实现，约束P2b却没有明确的how to do。
@@ -136,7 +136,7 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 这个Proposer向集合S询问自身提案是否应该被提出的过程，可总结为约束:
 <br/>
 <br/>
-<strong id="p2c">P2c</strong>: 对于任意的M<sub>n</sub>和V<sub>n</sub>，如果提案[M<sub>n</sub>,V<sub>n</sub>]被提出，那么肯定存在一个由半数以上的Acceptor组成的集合S，满足以下两个条件中的任意一个:
+<h4 id="p2c">P2c</h4>: 对于任意的M<sub>n</sub>和V<sub>n</sub>，如果提案[M<sub>n</sub>,V<sub>n</sub>]被提出，那么肯定存在一个由半数以上的Acceptor组成的集合S，满足以下两个条件中的任意一个:
 - S中不存在任何批准过编号小于Mn的提案的Acceptor。
 - 选取S中所有Acceptor批准的编号小于M<sub>n</sub>的提案，其中编号最大的那个提案Value为V<sub>n</sub>。
 
@@ -154,7 +154,7 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 
 首先，Proposer会先生成提案，即先进行Prepare请求，以期满足P2c：
 
-1. Proposer选择一个新的提案号M<sub>n</sub>，向一个包含大多数Acceptor的集合发送请求，要求如下<span id="response" target="_parent">回应</span>:
+1. Proposer选择一个新的提案号M<sub>n</sub>，向一个包含大多数Acceptor的集合发送请求，要求如下<span id="response">回应</span>:
     - 如果Acceptor已经批准提案，那么就向Proposer反馈当前该Acceptor已经批准过的编号小于M<sub>n</sub>但为最大编号的那个提案的值。
     - 向Proposer承诺，不再批准任何编号小于M<sub>n</sub>的提案。（这条承诺是必要的，因为Acceptor已经向Proposer发送了比M<sub>n</sub>编号小的提案的值，如果再批准比Mn编号小的提案，这种行为是无法通知到已经收到响应的Proposer的，且与上一条回应逻辑相悖）
 2. 如果Proposer收到了来自半数以上的Acceptor的响应，那么它可以产生提案[M<sub>n</sub>,V<sub>n</sub>],这里的V<sub>n</sub>是所有响应中编号为最大的提案的Value值。如果半数以上的Acceptor都没有同意任何提案，那么Proposer可以任意选择值V<sub>n</sub>。
@@ -165,13 +165,13 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 ## 6. Acceptor批准提案
 
 由Proposer提交提案流程可知，Acceptor会收到两种类型的请求: Prepare和Accept。对于两种请求，Acceptor的响应策略应该为:
-- <strong>Prepare请求</strong>： Acceptor在任何时候响应此类型请求，并满足<a href="#response">回应</a>。
-- <strong>Accept请求</strong>: 在不违背Accept现有承诺的前提下，可以响应Accept请求。
+- <h4>Prepare请求</h4>： Acceptor在任何时候响应此类型请求，并满足<a href="#response">回应</a>。
+- <h4>Accept请求</h4>: 在不违背Accept现有承诺的前提下，可以响应Accept请求。
 
 不违背现有承诺,即不批准任何编号小于已经接受过的Prepare请求，加上约束<a href="#p1">P1</a>,可总结为:
 <br/>
 <br/>
-<strong id="p1a">P1a</strong>: 一个Acceptor只要尚未响应过任何大于M<sub>n</sub>的Prepare请求，那么它就可以接受这个编号为M<sub>n</sub>的提案。
+<h4 id="p1a">P1a</h4>: 一个Acceptor只要尚未响应过任何大于M<sub>n</sub>的Prepare请求，那么它就可以接受这个编号为M<sub>n</sub>的提案。
 <br/>
 <br/>
 P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运行环境<a href="#environment">environment</a>提到，消息可能会延迟，于是Acceptor可能会接收到比已经接收到的Prepare请求的M<sub>n</sub>提案，编号更小的的提案的Prepare请求。同样，由于消息可能会重复，于是Acceptor可能会收到它已经批准过的提案的Prepare请求。
@@ -183,7 +183,7 @@ P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运
 
 此种优化策略下，Acceptor只需要存储：
 
-<strong id="storage">storage</strong>
+<h4 id="storage">storage</h4>
 </be>
 - 它所批准的过的最高提案号的提案
 - 所响应过的Prepare请求中，最高的提案编号
@@ -202,11 +202,11 @@ P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运
     2. 若此编号小于它所响应的Prepare请求，那么Acceptor回应它所响应过的Prepare请求中编号最大的那个。(回复：no，M<sub>x</sub>。 其中x>n)
     
 
-## 7.提案选定过程陈述<span id="statement"></span>
+## 7. 提案选定过程陈述<span id="statement"></span>
 
 结合Proposer的发送策略，以及Acceptor的处理策略，可得到一个两阶段的执行过程
 
-<strong id="phase1">Phase1</strong>
+<h4 id="phase1">Phase1</h4>
 <br/>
 1. Proposer选择一个提案编号M<sub>n</sub>，然后向包含大多数Acceptor的一个集合发送编号为M<sub>n</sub>的Prepare请求。
 2. 如果一个Acceptor收到一个编号为M<sub>n</sub>的Prepare请求
@@ -214,12 +214,12 @@ P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运
     - 若编号M<sub>n</sub>小于该Acceptor已经响应过的Prepare请求，则Acceptor回应已经响应过的Prepare请求中，最大的提案编号。
 
 
-<strong id="phase2">Phase2</strong>
+<h4 id="phase2">Phase2</h4>
 
 1. 如果Proposer收到来自半数以上的Acceptor对于其发出的编号为M<sub>n</sub>的prepare请求的响应，那么它就将生成的提案[M<sub>n</sub>,V<sub>n</sub>]的Accept请求发送给一个任意的包含大多数Acceptor的集合。
 2. 如果Acceptor收到[M<sub>n</sub>,V<sub>n</sub>]这个提案的Accept请求，只要该Acceptor尚未对编号大于M<sub>n</sub>的Prepare请求做出响应，它就可以通过这个提案。
 
-## 8. 提案的获取
+## 8. Learner获取提案
 
 Proposer和Acceptor通过上文的协作，负责了提案的选定。Learner角色则负责提案的获取。
 <br/>
@@ -243,7 +243,7 @@ Proposer和Acceptor通过上文的协作，负责了提案的选定。Learner角
 解决办法是:
 <br/>
 <br/>
-<strong id="FACE/OFF">FACE/OFF</strong> (电影《变脸》英文名)
+<h4 id="FACE/OFF">FACE/OFF</h4> (电影《变脸》英文名)
 <br/>
 - Learner作为一个Proposer，发送一个Prepare请求给Acceptor，这样Acceptor会在Prepare编号更高时，将已经批准过的提案发回给Learner。
 
@@ -252,7 +252,7 @@ Proposer和Acceptor通过上文的协作，负责了提案的选定。Learner角
 Paxos算法的核心逻辑已经描述结束，但对于Proposer，需要预防一种类似"死锁"的情形。此情形为:
 <br/>
 <br/>
-<strong id="circle-scenario">Circle-Scenario
+<h4 id="circle-scenario">Circle-Scenario
 <br/>
 有两个Proposer按顺序产生一系列提案，当Proposer P1提出了一个提案M<sub>1</sub>，并且完成<a href="#phase1">阶段一</a>，此时Proposer P2提出提案M<sub>2</sub> (明显2>1),M<sub>2</sub>也完成了<a href="#phase1">阶段一</a>的提交，此时，提案M<sub>1</sub>后续的Accept请求才发出，于是被M<sub>2</sub>的Prepare请求拒绝，然后Proposer P1一怒之下，发出提案M<sub>3</sub>，提案M<sub>3</sub>也完成了<a href="#phase1">阶段一</a>,于是后续M<sub>2</sub>的Accept请求被拒绝。Proposer P2一怒之下，发出提案M<sub>4</sub> …… 
 <br/>
