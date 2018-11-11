@@ -11,15 +11,26 @@ tags: 服务端 Web C++ Java
 本文建议阅读时间为一个无人打扰的下午加上没人想你的晚上
 
 ## 1. 分布式一致性
-我看过介绍自己公司架构演进的书，以及了解过一些大型互联网公司如google、facebook、的架构演进过程。所有的变化遵循着这个方向：<br/>
-    单机部署->高质量小型机->分布式系统<br/>
+我看过介绍自己公司架构演进的书，以及了解过一些大型互联网公司如google、facebook、的架构演进过程。所有的变化遵循着这个方向：
+<br/>
+
+- 单机部署 -> 高质量小型机 -> 分布式系统
+<br/>    
+
+
 既然最终会演进到分布式系统，那么自然会面临一些分布式特有的问题。
 首当其冲，如何保证数据一致性，或者说最终一致性的问题。
-在引入现成的工具，例如Zookeeper之前，有必要先了解，怎样的方式，能够实现数据一致性。<br/>
+在引入现成的工具，例如Zookeeper之前，有必要先了解，怎样的方式，能够实现数据一致性。
+<br/>
+<br/>
 Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/research/uploads/prod/2016/12/The-Part-Time-Parliament.pdf)
 中给出了算法Paxos，11年后，他又给出了另一篇论文，[Paxos-made-simple](http://lamport.azurewebsites.net/pubs/paxos-simple.pdf)
-用来给那些看不懂上一篇论文的人一个简单些的选择。<br/>
-可惜，Paxos-made-simple对于大部分人来讲，仍然不是一遍就能理解paxos算法的文章。我先看过《从Paxos到ZooKeeper》，然后再看Paxos-made-simple原文，才算理解此算法。<br/>
+用来给那些看不懂上一篇论文的人一个简单些的选择。
+<br/>
+<br/>
+可惜，Paxos-made-simple对于大部分人来讲，仍然不是一遍就能理解paxos算法的文章。我先看过《从Paxos到ZooKeeper》，然后再看Paxos-made-simple原文，才算理解此算法。
+<br/>
+<br/>
 这篇文章接下来，致力于剥离出Paxos-made-simple原文中的推导细节和证明细节，让你一遍懂Paxos。
 
 ## 2. 想要的结果
@@ -82,15 +93,31 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 <strong id="p1">P1</strong>: 一个Accpetor必须批准它收到的第一个提案。
 <br/>
 <br/>
-显然，如果Accpetor收到第一个提案后，要去斟酌权衡:"我觉得下一个提案或许会更好"，那么对于分布式系统而言，有可能永远没有下一个提案，此与我们的hope相悖。<br/>
-ok,我们获得第一个对Acceptor的行为约束，P1。<br/>
-但是，P1同时带来了一个问题，如果Acceptor无脑同意第一个提案，那么可能存在的情形是：同一时间，有不同的提案被提出，但是没有任何一个提案占据了大多数的Acceptor，于是没有一个提案被选定。(极端情形，两个不同的提案分别被一半一半的Acceptor所批准了)<br/>
-如果,Acceptor能够批准不止一个提案，那么就可以同时满足<a href="#p1">P1</a>和<a href="#most-rule">most-rule</a>了。<br/>
-即使在第一轮提案批准中，的确没有一个提案被大多数Acceptor接收到，即无法满足most-rule，无提案被选定。但是Acceptor可以继续接受并批准提案，这场分布式系统内部的通信会议可以继续下去。<br/>
-现在，由于Acceptor可以批准多个提案，我们先对提案进行一个标记，让提案有编号，从而唯一标识一个被Acceptor批准的提案。于是，一个提案可以被表示为“[编号，Value]”。<br/>
-对于提案的编号，可以使用开源的snowflake算法来生成。<br/>
+显然，如果Accpetor收到第一个提案后，要去斟酌权衡:"我觉得下一个提案或许会更好"，那么对于分布式系统而言，有可能永远没有下一个提案，此与我们的hope相悖。
+<br/>
+<br/>
+ok,我们获得第一个对Acceptor的行为约束，P1。
+<br/>
+<br/>
+但是，P1同时带来了一个问题，如果Acceptor无脑同意第一个提案，那么可能存在的情形是：同一时间，有不同的提案被提出，但是没有任何一个提案占据了大多数的Acceptor，于是没有一个提案被选定。(极端情形，两个不同的提案分别被一半一半的Acceptor所批准了)
+<br/>
+<br/>
+如果,Acceptor能够批准不止一个提案，那么就可以同时满足<a href="#p1">P1</a>和<a 
+href="#most-rule">most-rule</a>了。
+<br/>
+<br/>
+即使在第一轮提案批准中，的确没有一个提案被大多数Acceptor接收到，即无法满足most-rule，无提案被选定。但是Acceptor可以继续接受并批准提案，这场分布式系统内部的通信会议可以继续下去。
+<br/>
+<br/>
+现在，由于Acceptor可以批准多个提案，我们先对提案进行一个标记，让提案有编号，从而唯一标识一个被Acceptor批准的提案。于是，一个提案可以被表示为“[编号，Value]”。
+<br/>
+<br/>
+对于提案的编号，可以使用开源的snowflake算法来生成。
+<br/>
+<br/>
 当然，由于Acceptor可以批准多个提案，所以可能会有多个提案都满足了most-rule,于是多个提案被选定了。对于
 <a href="#safety">safety</a>中第二条来讲，如果被选定的提案有多个，那么需要保证多个提案为同一个值。<br/>
+<br/>
 幸运的是，我们现在对提案进行了编号，所以可以通过编号次序来满足这一点:
 <br/>
 <br/>
@@ -116,15 +143,21 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 <br/>
 对于P2b的约束，我们需要再进一步，找到一个可行性好的约束。
 <br/>
+<br/>
 思考P2b约束的执行，最终的执行结果为:
+<br/>
 <br/>
 如果某个提案[M<sub>0</sub>,V<sub>0</sub>]已经被选定了，提案M<sub>n</sub>的值Value为V<sub>0</sub>
 <br/>
+<br/>
 如果含有这样一个中间过程:
+<br/>
 <br/>
 假设编号在M<sub>0</sub>到M<sub>n-1</sub>之间的提案，其值都是V<sub>0</sub>。
 <br/>
+<br/>
 那么我们可以很容易通过第二数学归纳法来证明，P2b的执行结果是可以达到的。
+<br/>
 <br/>
 继续思考这个中间过程的达成时的结果：
 <br/>
@@ -132,6 +165,7 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 2. 集合C中的Acceptor，都批准了一个编号在M<sub>0</sub>到M<sub>n-1</sub>范围内的提案，并且每个编号在M<sub>0</sub>到M<sub>n-1</sub>范围内被Acceptor批准的提案，Value都为M<sub>0</sub>
 
 为了达成这个“中间过程”结果，Proposer在提出提案M<sub>n</sub>时，可以去访问一个包含大多数Acceptor的集合S，由于集合C和S都包含了Acceptor中的大多数，那么被集合C批准，从而选定的提案M<sub>0</sub>，必然在集合S中存在至少一个Acceptor批准了提案[M<sub>0</sub>,V<sub>0</sub>]。Proposer通过对集合S的访问，即可知道自身的提案M<sub>n</sub>是否应当被提出。
+<br/>
 <br/>
 这个Proposer向集合S询问自身提案是否应该被提出的过程，可总结为约束:
 <br/>
@@ -143,11 +177,12 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 <br/>
 如果不满足P2c中的条件，那么Proposer不应该提出这个提案。也就是P2c约束如果被满足，那么可以通过第二数学归纳法证明得出P2b，P2b得到执行可保证P2a，P2a又可保证P2，P2与P1一起，可保证得到我们希望的一致性结果result和hope。
 <br/>
+<br/>
 逻辑过程为:
 
-<a href="#p2c">P2c</a>=><a href="#p2b">P2b</a>=><a href="#p2a">P2a</a>=><a href="#p2">P2</a>;
+<a href="#p2c">P2c</a> => <a href="#p2b">P2b</a> => <a href="#p2a">P2a</a> => <a href="#p2">P2</a>;
 
-<a href="#p2">P2</a>+<a href="#p1">P1</a>=<a href="#result">result</a>+<a href="#hope">hope</a>;
+<a href="#p2">P2</a> + <a href="#p1">P1</a> = <a href="#result">result</a> + <a href="#hope">hope</a>;
 
 ## 5. Proposer提交提案
 有了P2c，我们可以总结出来Proposer的提案提交流程。
@@ -190,11 +225,15 @@ P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运
 
 即可满足它执行算法过程的上下文。并且哪怕Acceptor失败或者重启，依然能满足P2c。
 <br/>
+<br/>
 提到重启或失败，Prepare节点只要保证不会产生具有相同编号的提案，那么它可以丢弃任意的提案以及它所有的运行时状态。因为条件P2c由Acceptor存储上下文来满足。
+<br/>
 <br/>
 另外，由于Proposer可以丢弃任意提案，所以当它在试图生成一个更大编号的提案时，丢弃旧有提案是可在保持一致性的前提下的一个好选择。
 <br/>
+<br/>
 并且，如果Proposer知道Acceptor收到过的最大Prepare的提案编号多少，那么Proposer的提案丢弃更有效率。
+<br/>
 <br/>
 于是将Acceptor的行为继续优化为:
 - Acceptor在任何时候响应一个编号为Mn的Prepare请求
