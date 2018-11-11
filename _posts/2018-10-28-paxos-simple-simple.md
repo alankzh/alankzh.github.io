@@ -100,7 +100,7 @@ ok,我们获得第一个对Acceptor的行为约束，P1。<br/>
 为了满足P2，实际操作上，我们在提案被选定的入口，即Acceptor批准提案时，来做约束。即满足:
 <br/>
 <br/>
-<strong id="p2a">P2a</strong>: 如果编号为M<sub>0</sub>、Value为V<sub>0</sub>的提案，那么所有比编号M<sub>0</sub>更高的，且被Acceptor批准的提案，其值也必须是V<sub>0</sub>。
+<strong id="p2a">P2a</strong>: 如果编号为M<sub>0</sub>、Value为V<sub>0</sub>的提案被选定，那么所有比编号M<sub>0</sub>更高的，且被Acceptor批准的提案，其值也必须是V<sub>0</sub>。
 <br/>
 <br/>
 到现在为止，得出Acceptor行为必须满足的约束有: <a href="#p1">P1</a>和<a href="#p2a">P2a</a>
