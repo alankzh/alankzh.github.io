@@ -133,6 +133,7 @@ href="#most-rule">most-rule</a>了。
 到现在为止，得出Acceptor行为必须满足的约束有: <a href="#p1">P1</a>和<a href="#p2a">P2a</a>
 然而P1和P2a存在逻辑上的矛盾，假设一个Acceptor从未接受过提案，但此时有个提案已经被大多数的Acceptor批准，所以这个提案被选定了，但另一个值不同的提案发送给从未接受过提案的Acceptor，那么根据P1规则，Acceptor必须批准这个提案，但是根据规则P2a，Acceptor不得批准这个提案。
 <br/>
+<br/>
 解决这个矛盾的办法就是当提案被选定后，不再产生值不同的提案，即对P2a进行条件强化:
 <br/>
 <br/>
