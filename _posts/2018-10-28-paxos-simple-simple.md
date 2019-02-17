@@ -10,7 +10,7 @@ tags: 服务端 Web C++ Java
 
 本文建议阅读时间为一个无人打扰的下午加上没人想你的晚上
 
-## 1. 分布式一致性
+# 1. 分布式一致性
 我看过介绍自己公司架构演进的书，以及了解过一些大型互联网公司如google、facebook、的架构演进过程。所有的变化遵循着这个方向：
 <br/>
 
@@ -33,7 +33,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 <br/>
 这篇文章接下来，致力于剥离出Paxos-made-simple原文中的推导细节和证明细节，让你一遍懂Paxos。
 
-## 2. 想要的结果
+# 2. 想要的结果
 分布式系统存在多个节点，这些节点可能是一台硬件机器，也可能是一个进程，我们想要这些节点各自提出数据提案，但最终的结果<strong id="result">result</strong>为：<br/>
 1. 这些被提出的提案中，只有一个被选定。
 2. 无提案被提出，则无提案被选中。
@@ -50,7 +50,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 
 所以，我们想要的是，在<a href="#environment">environment</a>下，达成<a href="#result">result</a>，同时满足<a href="#safety">safety</a>。
 
-## 3. 节点行为的抽象
+# 3. 节点行为的抽象
         
 为达成这个结果，考虑，节点本身会进行哪些行为。我们对节点行为本身进行分析后，对这些行为进行约束，让能满足我们想要结果的做法通过，无法满足我们想要结果的行为屏蔽，即可找到此一致性算法。<br/>
 对节点行为进行分析后，节点的行为可以分类为：<br/>
@@ -80,7 +80,7 @@ Lamport在他的论文[The Part-time Paliament](https://www.microsoft.com/en-us/
 现在，对于most-rule，可描述为：<br/>
     如果大多数的Acceptor批准了一个提案，此提案被选定。
 
-## 4. 推导环节，考量节点行为的约束。
+# 4. 推导环节，考量节点行为的约束。
 
 现在，我们可以考量，我们抽象出来的三种角色，Proposer，Acceptor，Learner，进行他们的行为时，需要满足哪些约束。
 <br/>
@@ -185,7 +185,7 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 
 <a href="#p2">P2</a> + <a href="#p1">P1</a> = <a href="#result">result</a> + <a href="#hope">hope</a>;
 
-## 5. Proposer提交提案
+# 5. Proposer提交提案
 有了P2c，我们可以总结出来Proposer的提案提交流程。
 
 首先，Proposer会先生成提案，即先进行Prepare请求，以期满足P2c：
@@ -198,7 +198,7 @@ P2b与P1两个约束之间可以相处融洽。但是对于编程来讲，约束
 
 生成提案成功后，Proposer会将生成的提案再次发送给包含大多数Acceptor的集合，并期望获得它的批准。此即Accept请求。
 
-## 6. Acceptor批准提案
+# 6. Acceptor批准提案
 
 由Proposer提交提案流程可知，Acceptor会收到两种类型的请求: Prepare和Accept。对于两种请求，Acceptor的响应策略应该为:
 - <strong>Prepare请求</strong>： Acceptor在任何时候响应此类型请求，并满足<a href="#response">回应</a>。
@@ -242,7 +242,7 @@ P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运
     2. 若此编号小于它所响应的Prepare请求，那么Acceptor回应它所响应过的Prepare请求中编号最大的那个。(回复：no，M<sub>x</sub>。 其中x>n)
     
 
-## 7. 提案选定过程陈述<span id="statement"></span>
+# 7. 提案选定过程陈述<span id="statement"></span>
 
 结合Proposer的发送策略，以及Acceptor的处理策略，可得到一个两阶段的执行过程
 
@@ -259,7 +259,7 @@ P1a包含了P1，但我们还可对其进行一定层度的优化。我们的运
 1. 如果Proposer收到来自半数以上的Acceptor对于其发出的编号为M<sub>n</sub>的prepare请求的响应，那么它就将生成的提案[M<sub>n</sub>,V<sub>n</sub>]的Accept请求发送给一个任意的包含大多数Acceptor的集合。
 2. 如果Acceptor收到[M<sub>n</sub>,V<sub>n</sub>]这个提案的Accept请求，只要该Acceptor尚未对编号大于M<sub>n</sub>的Prepare请求做出响应，它就可以通过这个提案。
 
-## 8. Learner获取提案
+# 8. Learner获取提案
 
 Proposer和Acceptor通过上文的协作，负责了提案的选定。Learner角色则负责提案的获取。
 <br/>
@@ -287,7 +287,7 @@ Proposer和Acceptor通过上文的协作，负责了提案的选定。Learner角
 <br/>
 - Learner作为一个Proposer，发送一个Prepare请求给Acceptor，这样Acceptor会在Prepare编号更高时，将已经批准过的提案发回给Learner。
 
-## 9. 优化Proposer，提高活性。
+# 9. 优化Proposer，提高活性。
 
 Paxos算法的核心逻辑已经描述结束，但对于Proposer，需要预防一种类似"死锁"的情形。此情形为:
 <br/>
@@ -299,7 +299,7 @@ Paxos算法的核心逻辑已经描述结束，但对于Proposer，需要预防�
 <br/>
 为了避免陷入Circle-Scenario，可以选择一个主Proposer，只要主Proposer才可以提出提案。这样一来，只要主Proposer能够与过半的Acceptor通信，那么整套算法就能保持活性。
 
-## 10. 实现
+# 10. 实现
 
 
 Paxos算法假定有一个进程网络，在共识算法中，每一个进程扮演Proposer，Acceptor，Learner这些角色。算法选出一个leader进程，扮演主Proposer和主Learner。
